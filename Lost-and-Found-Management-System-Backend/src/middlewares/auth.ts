@@ -2,11 +2,11 @@ import { NextFunction, Request,Response } from "express"
 import  jwt  from 'jsonwebtoken';
 import User from "../models/User";
 
- export interface AuthRequest extends Request {
-  user?:{
-    id:string,
-    email:string,
-    role:'user'|'admin'
+export interface AuthRequest extends Request<any, any, any, any> {
+  user?: {
+    id: string;
+    email: string;
+    role: 'user' | 'admin';
   };
 }
 
