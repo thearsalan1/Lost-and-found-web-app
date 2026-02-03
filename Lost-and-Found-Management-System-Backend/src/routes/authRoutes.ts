@@ -1,11 +1,10 @@
-import express from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { signupSchema, loginSchema } from "../Schemas/authSchema";
 import { signup, login } from "../controllers/authController";
 
-const router = express.Router();
+const router = Router();
 
-// Post /api/auth/signup
-router.post("/signup", async (req, res, next) => {
+router.post("/signup", async (req: Request, res: Response, next: NextFunction) => {
   try {
     signupSchema.parse(req.body);
     await signup(req, res);
@@ -14,8 +13,7 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-// POST /api/auth/login
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
   try {
     loginSchema.parse(req.body);
     await login(req, res);
