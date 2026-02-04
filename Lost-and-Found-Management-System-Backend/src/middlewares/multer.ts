@@ -1,8 +1,8 @@
-import multer from "multer";
+import multer, { StorageEngine } from "multer";
 import path from "node:path";
 import { Request } from "express";
 
-const storage = multer.diskStorage({
+const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, path.join(__dirname, "../../public/temp"));
   },
