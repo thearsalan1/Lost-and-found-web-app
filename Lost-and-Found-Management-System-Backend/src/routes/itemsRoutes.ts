@@ -3,6 +3,7 @@ import { authenticateToken } from "../middlewares/auth";
 import { createItem, deleteItem, getItem, getItemById, updateitem } from "../controllers/itemsController";
 import { createItemSchema } from "../Schemas/authSchema";
 import { submitClaim } from "../controllers/claimController";
+import { upload } from "../middlewares/multer";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -24,7 +25,7 @@ router.get("/:id", getItemById);
 router.use(authenticateToken as express.RequestHandler);
 
 // Create item (user only)
-router.post("/", (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post("/",upload.single("image"), (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     createItemSchema.parse(req.body);
     createItem(req, res);

@@ -1,13 +1,25 @@
 import { Request,Response } from "express"
 import { createItemSchema } from "../Schemas/authSchema";
 import Item from "../models/Item";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 interface AuthRequest extends Request{
   user?:{id:string;email:string; role:'user'|'admin'}
 }
 
 export const createItem = async(req:AuthRequest,res:Response)=>{
   try {
-    const validatedDate = createItemSchema.parse(req.body);
+
+    let imageUrl: string | undefined;
+
+    if(req.file){
+      const cloudinaryRes = await uploadOnCloudinary(req.file.path);
+      if(cloudinaryRes){
+        imageUrl= cloudinaryRes.secure_url;
+      }
+    }
+    const validatedDate = createItemSchema.parse({...req.body,
+      images:imageUrl ? [imageUrl] : [],
+    });
 
    const item = new Item({
       ...validatedDate,
