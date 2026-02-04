@@ -1,11 +1,12 @@
 import multer from "multer";
 import path from "node:path";
+import { Request } from "express";
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname,"../../public/temp"));
+  destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    cb(null, path.join(__dirname, "../../public/temp"));
   },
-  filename: (req, file, cb) => {
+  filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     cb(null, Date.now() + "-" + file.originalname);
   },
 });

@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    // "types": ["node", "express","cors","jsonwebtoken"]
+    "types": ["node", "express","cors","jsonwebtoken","multer"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
