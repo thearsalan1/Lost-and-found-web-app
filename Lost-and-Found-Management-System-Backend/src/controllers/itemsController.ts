@@ -3,7 +3,8 @@ import { createItemSchema } from "../Schemas/authSchema";
 import Item from "../models/Item";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 interface AuthRequest extends Request{
-  user?:{id:string;email:string; role:'user'|'admin'}
+  user?: { id: string; email: string; role: "user" | "admin" };
+  file?: Express.Multer.File;
 }
 
 export const createItem = async(req:AuthRequest,res:Response)=>{
