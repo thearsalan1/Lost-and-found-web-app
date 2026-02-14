@@ -32,6 +32,6 @@ export const createItemSchema = z.object({
     'bag', 
     'other'
   ]),
-  status: z.enum(['lost', 'found']),
+  status: z.enum(['lost', 'found']).default('lost'),
   images: z.array(z.string().url().optional()).max(5).default([])
 });

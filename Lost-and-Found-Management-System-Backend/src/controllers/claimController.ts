@@ -15,9 +15,7 @@ export const submitClaim = async(req:ClaimRequest,res:Response)=>{
     const { id } = req.params;
     const itemId = Array.isArray(id) ? id[0] : id;
     const {proof} = req.body;
-
-    const itemsObjectId = new mongoose.Types.ObjectId(itemId)
-
+    
     if (!mongoose.Types.ObjectId.isValid(itemId)) {
       return res.status(400).json({
         success: false,
@@ -25,42 +23,67 @@ export const submitClaim = async(req:ClaimRequest,res:Response)=>{
       });
     }
 
-    const item = await Item.findOne({_id:itemsObjectId,itemStatus:'open'});
+    const itemsObjectId = new mongoose.Types.ObjectId(itemId);
+
+    const item = await Item.findById(itemsObjectId);
+    
+    
     if(!item){
-      return res.status(400).json({
+      return res.status(404).json({
         success:false,
-        error:{code:"INVALID_ITEM",message:"Item not open for claims"}
+        error:{code:"ITEM_NOT_FOUND",message:"Item not found"}
       })
     }
 
-    if(item.postedBy.toString()===req.user!.id){
+    if(item.itemStatus !== 'open'){
       return res.status(400).json({
         success:false,
-        error:{code:"OWN_ITEM",message:"Can not claim own item"}
+        error:{code:"ITEM_NOT_OPEN",message:"Item not open for claims"}
       })
     }
 
+    if(item.postedBy.toString() === req.user!.id){
+      return res.status(400).json({
+        success:false,
+        error:{code:"OWN_ITEM",message:"Cannot claim own item"}
+      })
+    }
+
+    if(!proof || !proof.trim()){
+      return res.status(400).json({
+        success:false,
+        error:{code:"MISSING_PROOF",message:"Proof is required"}
+      })
+    }
+
+    // Create and save the claim
     const claim = new Claim({
-      itemId:itemsObjectId,
-      claimedBy:new mongoose.Types.ObjectId(req.user!.id),
+      itemId: itemsObjectId,
+      claimedBy: new mongoose.Types.ObjectId(req.user!.id),
       proof,
-      status:'pending'
+      status: 'pending'
     });
 
     await claim.save();
 
+    console.log("Claim created successfully:", claim._id);
+    
     res.status(201).json({
-      success:true,
-      data:{
-        claimId:claim._id,
-        message:"Cliam submitted successfully. Waiting for admin approval."
+      success: true,
+      data: {
+        claimId: claim._id,
+        message: "Claim submitted successfully. Waiting for admin approval."
       }
     })
 
   } catch (error) {
     res.status(500).json({
-      success:false,
-      error:{code:"SERVER_ERROR",message:"Failed to submit claim"}
+      success: false,
+      error: {
+        code: "SERVER_ERROR",
+        message: "Failed to submit claim",
+        details: error instanceof Error ? error.message : String(error) 
+      }
     })
   }
 }

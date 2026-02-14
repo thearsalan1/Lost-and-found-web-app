@@ -159,70 +159,81 @@ export const getItemById = async (req:AuthRequest,res:Response)=>{
   }
 }
 
-export const updateitem = async (req:AuthRequest,res:Response )=>{
+export const updateitem = async (req: AuthRequest, res: Response) => {
   try {
-    const item = await Item.findOne({
-      _id:req.params.id,
-      $or:[
-        {postedBy:req.user!.id},
-        {'postedBy':req.user!.id}
-      ]
-    });
-    if(!item){
-      return res.status(403).json({
-        success:false,
-        error:{code:'FORBIDDEN',message:"You can only update your own items"}
+    // First, find the item
+    const item = await Item.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Item not found' }
       });
     }
 
+    // Check if user is either the owner or an admin
+    if (item.postedBy.toString() !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'You can only update your own items unless you are an admin' }
+      });
+    }
+
+    // Apply updates
     const updates = req.body;
     const updatedItem = await Item.findByIdAndUpdate(
       req.params.id,
-      {...updates,updatedAt:new Date()},
-      {new:true , runValidators:true}
-    ).populate('postedBy','name email');
+      { ...updates, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).populate('postedBy', 'name email');
 
     res.json({
-      success:true,
-      data:updatedItem
-    })
+      success: true,
+      data: updatedItem
+    });
   } catch (error) {
     res.status(400).json({
       success: false,
       error: { code: 'UPDATE_ERROR', message: 'Failed to update item' }
     });
   }
-}
+};
 
 
-export const deleteItem = async (req:AuthRequest,res:Response)=>{
+export const deleteItem = async (req: AuthRequest, res: Response) => {
   try {
-    const item = await Item.findOne({
-      _id:req.params.id,
-      postedBy:req.user!.id,
-      itemStatus:'open'
-    });
-
-    if(!item){
+    if (req.user?.role !== "admin") {
       return res.status(403).json({
-        success:false,
-        error:{
-          code:"FORBIDDEN",
-          message:"Can only delete your own open items"
-        }
-      })
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: "Only admins can delete items",
+        },
+      });
+    }
+
+    const item = await Item.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "NOT_FOUND",
+          message: "Item not found",
+        },
+      });
     }
 
     await Item.findByIdAndDelete(req.params.id);
-    
+
     res.json({
       success: true,
-      message: 'Item deleted successfully'
+      message: "Item deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: { code: 'DELETE_ERROR', message: 'Failed to delete item' }
+      error: { code: "DELETE_ERROR", message: "Failed to delete item" },
     });
   }
-}
+};
