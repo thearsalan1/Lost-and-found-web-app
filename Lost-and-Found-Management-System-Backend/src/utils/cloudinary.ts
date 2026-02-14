@@ -1,29 +1,31 @@
-import {v2 as cloudinary} from "cloudinary";
-import fs from 'fs'
+// cloudinary.ts
+import { v2 as cloudinary } from "cloudinary";
 import { UploadApiResponse } from "cloudinary";
 
-
 cloudinary.config({
-  cloud_name:process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key:process.env.CLOUDINARY_API_KEY!,
-  api_secret:process.env.CLOUDINARY_API_SECRET!
-})
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
- const uploadOnCloudinary = async(localFilePath:string): Promise<UploadApiResponse | null>=>{
-  try {
+const uploadOnCloudinary = async (
+  fileBuffer: Buffer,
+  mimetype: string
+): Promise<UploadApiResponse | null> => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { resource_type: "image" },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          resolve(null);
+        } else {
+          resolve(result ?? null);
+        }
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
 
-    if(!localFilePath) {console.log("no file found");
-     return null;}
-    const res= await cloudinary.uploader.upload(localFilePath,{
-      resource_type:"image"
-    })
-    console.log("File is uploaded successfully ",res.url)
-    return res;
-  } catch (error) {
-    fs.unlinkSync(localFilePath);
-    console.log(error);
-    return null;
-  }
-}
-
-export {uploadOnCloudinary};
+export { uploadOnCloudinary };

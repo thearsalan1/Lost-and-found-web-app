@@ -1,23 +1,17 @@
-import multer, { StorageEngine } from "multer";
+import multer from "multer";
 import path from "node:path";
-import os from "node:os";
-import { Request } from "express";
 
-const storage: StorageEngine = multer.diskStorage({
-  destination: (
-    req: Request,
-    file: Express.Multer.File,
-    cb: (error: Error | null, destination: string) => void
-  ) => {
-    cb(null, os.tmpdir());
-  },
-  filename: (
-    req: Request,
-    file: Express.Multer.File,
-    cb: (error: Error | null, filename: string) => void
-  ) => {
-    cb(null, Date.now() + "-" + file.originalname);
+export const upload = multer({
+  storage: multer.memoryStorage(), 
+  limits: { fileSize: 5 * 1024 * 1024 }, 
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
   },
 });
-
-export const upload = multer({ storage });

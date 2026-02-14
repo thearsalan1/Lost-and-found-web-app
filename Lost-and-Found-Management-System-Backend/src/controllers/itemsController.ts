@@ -7,47 +7,67 @@ interface AuthRequest extends Request{
   file?: Express.Multer.File;
 }
 
-export const createItem = async(req:AuthRequest,res:Response)=>{
+export const createItem = async (req: AuthRequest, res: Response) => {
   try {
-
     let imageUrl: string | undefined;
 
-    if(req.file){
-      const cloudinaryRes = await uploadOnCloudinary(req.file.path);
-      if(cloudinaryRes){
-        imageUrl= cloudinaryRes.secure_url;
+    if (req.file) {
+      console.log("File received:", req.file.originalname, req.file.size);
+
+      
+      const cloudinaryRes = await uploadOnCloudinary(
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      if (cloudinaryRes) {
+        imageUrl = cloudinaryRes.secure_url;
+        console.log("Uploaded to Cloudinary:", imageUrl);
+      } else {
+        console.error("Cloudinary upload returned null");
       }
+    } else {
+      console.log("No file in request");
     }
-    const validatedDate = createItemSchema.parse({...req.body,
-      images:imageUrl ? [imageUrl] : [],
+
+    const validatedData = createItemSchema.parse({
+      ...req.body,
+      images: imageUrl ? [imageUrl] : [],
     });
 
-   const item = new Item({
-      ...validatedDate,
+    const item = new Item({
+      ...validatedData,
       postedBy: req.user!.id,
-      itemStatus: 'open'
+      itemStatus: "open",
     });
+
     await item.save();
 
-    const populateItem = await Item.findById(item._id).populate('postedBy','name email').lean();
+    const populatedItem = await Item.findById(item._id)
+      .populate("postedBy", "name email")
+      .lean();
 
-    res.status(201).json({
-      success: true,
-      data: populateItem
-    });
-  } catch (error:any) {
-    if (error.name === 'ZodError') {
+    res.status(201).json({ success: true, data: populatedItem });
+  } catch (error: any) {
+    console.error("createItem error:", error);
+
+    if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid item data', details: error.errors }
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid item data",
+          details: error.errors,
+        },
       });
     }
+
     res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to create item' }
+      error: { code: "SERVER_ERROR", message: "Failed to create item" },
     });
   }
-}
+};
 
 export const getItem = async (req:AuthRequest,res:Response)=>{
    try {
