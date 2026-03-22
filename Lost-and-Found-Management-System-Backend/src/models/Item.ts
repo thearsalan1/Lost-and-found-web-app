@@ -42,6 +42,14 @@ const ItemSchema:Schema = new Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref:'User', 
   },
+  phoneNo:{
+    type:String,
+    required:true,
+  },
+  reporterName:{
+    type:String,
+    required:true,
+  },
   itemStatus:{
     type:String,
     enum:['open','claimed','resolved'],
@@ -59,7 +67,6 @@ const ItemSchema:Schema = new Schema({
   timestamps:true
 })
 
-// Indexes for performance
 ItemSchema.index({ status: 1, itemStatus: 1 });
 ItemSchema.index({ postedBy: 1 });
 ItemSchema.index({ createdAt: -1 });

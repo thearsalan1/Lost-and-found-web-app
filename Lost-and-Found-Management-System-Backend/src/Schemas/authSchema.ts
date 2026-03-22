@@ -33,5 +33,7 @@ export const createItemSchema = z.object({
     'other'
   ]),
   status: z.enum(['lost', 'found']).default('lost'),
-  images: z.array(z.string().url().optional()).max(5).default([])
+  images: z.array(z.string().url().optional()).max(5).default([]),
+  phoneNo: z.string().length(10,'Phone number must be 10 digits'),
+  reporterName:z.string().min(3)
 });

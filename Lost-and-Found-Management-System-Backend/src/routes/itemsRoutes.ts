@@ -27,7 +27,6 @@ router.use(authenticateToken as express.RequestHandler);
 // Create item (user only)
 router.post("/",upload.single("image"), (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    createItemSchema.parse(req.body);
     createItem(req, res);
   } catch (error) {
     console.error(error);

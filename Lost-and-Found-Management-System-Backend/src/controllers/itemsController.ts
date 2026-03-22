@@ -9,6 +9,7 @@ interface AuthRequest extends Request{
 
 export const createItem = async (req: AuthRequest, res: Response) => {
   try {
+    
     let imageUrl: string | undefined;
 
     if (req.file) {
@@ -181,7 +182,6 @@ export const getItemById = async (req:AuthRequest,res:Response)=>{
 
 export const updateitem = async (req: AuthRequest, res: Response) => {
   try {
-    // First, find the item
     const item = await Item.findById(req.params.id);
 
     if (!item) {
