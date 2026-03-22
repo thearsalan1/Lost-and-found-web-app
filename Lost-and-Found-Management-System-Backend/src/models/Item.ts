@@ -13,6 +13,11 @@ export interface IItemDocument extends Document{
 }
 
 const ItemSchema:Schema = new Schema({
+  UserId:{
+    type:String,
+    required:true,
+    unique:true,
+  },
   title:{
     type:String,
     required:true,

@@ -117,6 +117,8 @@ const itemsPipline:any[] = [
     $project:{
       title:1,
       description:1,
+      reporterName:1,
+      phoneNo:1,
       category:1,
       status:1,
       itemStatus:1,

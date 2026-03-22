@@ -20,6 +20,7 @@ export const loginSchema = z.object({
 
 // Add to existing authSchemas.ts
 export const createItemSchema = z.object({
+  UserId:z.string(),
   title: z.string().min(3, 'Title too short').max(100, 'Title too long'),
   description: z.string().min(10, 'Description too short').max(1000),
   category: z.enum([
