@@ -178,24 +178,30 @@ const claimId = Array.isArray(id) ? id[0] : id;
   }
 }
 
-export const getMyClaims = async (req:AuthRequest,res:Response)=>{
+export const getMyClaims = async (req: AuthRequest, res: Response) => {
   try {
-     const claims = await Claim.find({ 
-      claimedBy: req.user!.id
-    })
-    .populate("itemId","title status category")
-    .populate("approvedBy","name email")
-    .sort({createdAt:-1})
-    .lean();
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'User not authenticated' }
+      });
+    }
 
-    res.json({
-      success:true,
-      data:claims
-    })
+    const claims = await Claim.find({ claimedBy: req.user.id })
+      .populate({
+        path: "itemId",
+        select: "title status category phoneNo reporterName UserId"
+      })
+      .populate("approvedBy", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, data: claims });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       error: { code: 'MY_CLAIMS_ERROR', message: 'Failed to fetch claims' }
     });
   }
-}
+};

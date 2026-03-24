@@ -30,7 +30,7 @@ export const adminDashboard = async (req: AuthRequest, res: Response) => {
         .limit(5)
         .lean(),
       Claim.find()
-        .populate('itemId', 'title')
+        .populate('itemId', 'title reporterName phoneNo UserId')
         .populate('claimedBy', 'name')
         .sort({ createdAt: -1 })
         .limit(5)

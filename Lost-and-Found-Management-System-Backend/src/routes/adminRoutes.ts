@@ -24,7 +24,7 @@ router.get('/dashboard',adminDashboard);
 
 router.get('/claim',async(req:AuthRequest,res:Response)=>{
   const claims = await Claim.find({ status: 'pending' })
-    .populate('itemId', 'title status')
+    .populate('itemId', 'title status reporterName phoneNo UserId')
     .populate('claimedBy', 'name email')
     .lean();
   res.json({ success: true, data: claims });
