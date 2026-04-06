@@ -11,11 +11,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-transporter.verify((error) => {
+transporter.verify((error: Error | null, success?: boolean) => {
   if (error) {
     console.error('❌ Email transporter error:', error.message);
+  } else {
+    console.log('✅ Email transporter is ready to send messages');
   }
 });
+
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
