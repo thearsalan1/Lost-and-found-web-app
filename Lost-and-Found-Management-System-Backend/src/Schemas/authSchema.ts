@@ -1,21 +1,40 @@
-import z from "zod";
+// schemas/authSchema.ts
+import { z } from 'zod';
 
 export const signupSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  phoneNumber: z.string().optional()
-}).refine((data) => /[a-z]/.test(data.password), {
-  message: 'Password must contain at least one letter',
-  path: ['password']
-}).refine((data) => /[0-9]/.test(data.password), {
-  message: 'Password must contain at least one number',
-  path: ['password']
+  email: z
+    .string()
+    .email('Invalid email format')
+    .toLowerCase()
+    .trim(),
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .trim(),
+  phoneNumber: z
+    .string()
+    .trim()
+    .optional()
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(1)
+  email: z
+    .string()
+    .email('Invalid email format')
+    .toLowerCase()
+    .trim()
+});
+
+export const verifySchema = z.object({
+  email: z
+    .string()
+    .email('Invalid email format')
+    .toLowerCase()
+    .trim(),
+  otp: z
+    .string()
+    .length(6, 'OTP must be 6 digits')
+    .regex(/^\d+$/, 'OTP must be numeric')
 });
 
 // Add to existing authSchemas.ts

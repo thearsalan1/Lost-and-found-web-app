@@ -66,7 +66,6 @@ export const submitClaim = async(req:ClaimRequest,res:Response)=>{
 
     await claim.save();
 
-    console.log("Claim created successfully:", claim._id);
     
     res.status(201).json({
       success: true,
