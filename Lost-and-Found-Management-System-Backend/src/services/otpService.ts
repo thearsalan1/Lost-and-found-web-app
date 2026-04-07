@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import User, { IUserDocument } from '../models/User';
 import { sendEmail } from '../utils/emailService';
 import { LoginTemplate } from '../template/EmailTemplate';
+import { sendLoginOtp } from '../utils/resend';
 
 function generateOtp(): number {
   return crypto.randomInt(100_000, 999_999);
@@ -10,7 +11,7 @@ function generateOtp(): number {
 async function sendOtpToUser(user: IUserDocument, email: string): Promise<void> {
   const otp = generateOtp();
   await user.setOtp(String(otp));
-  await sendEmail(email, 'Your Back2u login code', LoginTemplate(otp));
+  await sendLoginOtp(email, 'Your Back2u login code', LoginTemplate(otp));
 }
 
 export async function requestOtp(email: string): Promise<void> {
