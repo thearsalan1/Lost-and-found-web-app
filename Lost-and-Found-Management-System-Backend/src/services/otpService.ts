@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import User, { IUserDocument } from '../models/User';
-import { sendEmail } from '../utils/emailService';
 import { LoginTemplate } from '../template/EmailTemplate';
 import { sendLoginOtp } from '../utils/resend';
 
