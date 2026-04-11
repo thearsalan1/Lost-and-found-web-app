@@ -28,4 +28,8 @@ const uploadOnCloudinary = async (
   });
 };
 
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (public_id:string)=>{
+    await cloudinary.uploader.destroy(public_id)
+}
+
+export { uploadOnCloudinary , deleteFromCloudinary};

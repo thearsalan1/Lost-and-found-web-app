@@ -1,29 +1,29 @@
-import { Request,Response } from "express"
+import { Request, Response } from "express";
 import { createItemSchema } from "../Schemas/authSchema";
 import Item from "../models/Item";
-import { uploadOnCloudinary } from "../utils/cloudinary";
-interface AuthRequest extends Request{
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary";
+interface AuthRequest extends Request {
   user?: { id: string; email: string; role: "user" | "admin" };
   file?: Express.Multer.File;
 }
 
 export const createItem = async (req: AuthRequest, res: Response) => {
   try {
-    
     let imageUrl: string | undefined;
+    let public_id: string | undefined;
 
     if (req.file) {
       console.log("File received:", req.file.originalname, req.file.size);
 
-      
       const cloudinaryRes = await uploadOnCloudinary(
         req.file.buffer,
-        req.file.mimetype
+        req.file.mimetype,
       );
 
       if (cloudinaryRes) {
         imageUrl = cloudinaryRes.secure_url;
-        console.log("Uploaded to Cloudinary:", imageUrl);
+        public_id = cloudinaryRes.public_id;
+        console.log("Uploaded to Cloudinary:", imageUrl, public_id);
       } else {
         console.error("Cloudinary upload returned null");
       }
@@ -34,6 +34,7 @@ export const createItem = async (req: AuthRequest, res: Response) => {
     const validatedData = createItemSchema.parse({
       ...req.body,
       images: imageUrl ? [imageUrl] : [],
+      public_ids: public_id ? [public_id] : [],
     });
 
     const item = new Item({
@@ -70,117 +71,119 @@ export const createItem = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getItem = async (req:AuthRequest,res:Response)=>{
-   try {
+export const getItem = async (req: AuthRequest, res: Response) => {
+  try {
     const {
-  page=1,
-  limit=10,
-  status,
-  category,
-  itemStatus,
-  search,
-  sort='newest'
-}=req.query as any;
+      page = 1,
+      limit = 10,
+      status,
+      category,
+      itemStatus,
+      search,
+      sort = "newest",
+    } = req.query as any;
 
-const pageNum = parseInt(page as string);
-const limitNum = Math.min(parseInt(limit as string),50);
-const skip = (pageNum-1)*limitNum;
+    const pageNum = parseInt(page as string);
+    const limitNum = Math.min(parseInt(limit as string), 50);
+    const skip = (pageNum - 1) * limitNum;
 
-const filter:any = {itemStatus:{$ne:'resolved'}};
+    const filter: any = { itemStatus: { $ne: "resolved" } };
 
-if(status) filter.status = status;
-if(category) filter.category = category;
-if(itemStatus) filter.itemStatus = itemStatus;
-if(search){
-  filter.$or = [
-    {title:{$regex:search, $options:'i'}},
-    {description:{$regex:search,$options:'i'}}
-  ];
-};
-
-const itemsPipline:any[] = [
-  {$match:filter},
-  {$sort:sort === 'newest'? {createdAt:-1}:{updatedAt:-1}},
-  {$skip:skip},
-  {$limit:limitNum},
-  {
-    $lookup:{
-      from:'users',
-      localField:'postedBy',
-      foreignField:'_id',
-      as:'postedBy',
-      pipeline:[{$project:{name:1,email:1}}]
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+    if (itemStatus) filter.itemStatus = itemStatus;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
     }
-  },
-  {$unwind:{path:"$postedBy",preserveNullAndEmptyArrays:true}},
-  {
-    $project:{
-      title:1,
-      description:1,
-      reporterName:1,
-      phoneNo:1,
-      category:1,
-      status:1,
-      itemStatus:1,
-      images:1,
-      postedBy:{name:1,email:1},
-      createdAt:1,
-      updatedAt:1,
-      expiryDate:1
-    }
-  }
-];
 
-const [items,total] = await Promise.all([
-  Item.aggregate(itemsPipline),
-  Item.countDocuments(filter)
-])
+    const itemsPipline: any[] = [
+      { $match: filter },
+      { $sort: sort === "newest" ? { createdAt: -1 } : { updatedAt: -1 } },
+      { $skip: skip },
+      { $limit: limitNum },
+      {
+        $lookup: {
+          from: "users",
+          localField: "postedBy",
+          foreignField: "_id",
+          as: "postedBy",
+          pipeline: [{ $project: { name: 1, email: 1 } }],
+        },
+      },
+      { $unwind: { path: "$postedBy", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          reporterName: 1,
+          phoneNo: 1,
+          category: 1,
+          status: 1,
+          itemStatus: 1,
+          images: 1,
+          postedBy: { name: 1, email: 1 },
+          createdAt: 1,
+          updatedAt: 1,
+          expiryDate: 1,
+        },
+      },
+    ];
 
-res.json({
-  success:true,
-  data:{
-    items,
-    pagination:{
-      page:pageNum,
-      limit:limitNum,
-      total,
-      pages:Math.ceil(total/limitNum),
-      hasNext:pageNum*limitNum<total
-    }
-  }
-})
+    const [items, total] = await Promise.all([
+      Item.aggregate(itemsPipline),
+      Item.countDocuments(filter),
+    ]);
 
+    res.json({
+      success: true,
+      data: {
+        items,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          pages: Math.ceil(total / limitNum),
+          hasNext: pageNum * limitNum < total,
+        },
+      },
+    });
   } catch (error) {
-    console.error('Get items error:', error)
+    console.error("Get items error:", error);
     res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to fetch items' }
+      error: { code: "SERVER_ERROR", message: "Failed to fetch items" },
     });
   }
-}
+};
 
-export const getItemById = async (req:AuthRequest,res:Response)=>{
+export const getItemById = async (req: AuthRequest, res: Response) => {
   try {
-    const item = await Item.findById(req.params.id).populate('postedBy','name email').populate('claimedBy','name email').lean();
+    const item = await Item.findById(req.params.id)
+      .populate("postedBy", "name email")
+      .populate("claimedBy", "name email")
+      .lean();
 
-    if(!item){
+    if (!item) {
       return res.status(404).json({
-        success:false,
-        error:{code:'NOT_FOUND',message:"Item not found"}
-      })
+        success: false,
+        error: { code: "NOT_FOUND", message: "Item not found" },
+      });
     }
 
     res.json({
-      success:true,
-      data:item
-    })
+      success: true,
+      data: item,
+    });
   } catch (error) {
-  res.status(500).json({
-    success:false,
-    error:{code:"SERVER_ERROR",message:"Failed to fectch item"}
-  })  
+    res.status(500).json({
+      success: false,
+      error: { code: "SERVER_ERROR", message: "Failed to fectch item" },
+    });
   }
-}
+};
 
 export const updateitem = async (req: AuthRequest, res: Response) => {
   try {
@@ -189,15 +192,21 @@ export const updateitem = async (req: AuthRequest, res: Response) => {
     if (!item) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Item not found' }
+        error: { code: "NOT_FOUND", message: "Item not found" },
       });
     }
 
     // Check if user is either the owner or an admin
-    if (item.postedBy.toString() !== req.user!.id && req.user!.role !== 'admin') {
+    if (
+      item.postedBy.toString() !== req.user!.id &&
+      req.user!.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'You can only update your own items unless you are an admin' }
+        error: {
+          code: "FORBIDDEN",
+          message: "You can only update your own items unless you are an admin",
+        },
       });
     }
 
@@ -206,21 +215,20 @@ export const updateitem = async (req: AuthRequest, res: Response) => {
     const updatedItem = await Item.findByIdAndUpdate(
       req.params.id,
       { ...updates, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    ).populate('postedBy', 'name email');
+      { new: true, runValidators: true },
+    ).populate("postedBy", "name email");
 
     res.json({
       success: true,
-      data: updatedItem
+      data: updatedItem,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      error: { code: 'UPDATE_ERROR', message: 'Failed to update item' }
+      error: { code: "UPDATE_ERROR", message: "Failed to update item" },
     });
   }
 };
-
 
 export const deleteItem = async (req: AuthRequest, res: Response) => {
   try {
@@ -245,7 +253,9 @@ export const deleteItem = async (req: AuthRequest, res: Response) => {
         },
       });
     }
-
+    if (item.public_ids && item.public_ids.length > 0) {
+      await Promise.all(item.public_ids.map((id) => deleteFromCloudinary(id)));
+    }
     await Item.findByIdAndDelete(req.params.id);
 
     res.json({
