@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import User, { IUserDocument } from '../models/User';
 import { LoginTemplate } from '../template/EmailTemplate';
-import { sendLoginOtp } from '../utils/resend';
+import { sendLoginOtp } from '../utils/emailService';
 
 function generateOtp(): number {
   return crypto.randomInt(100_000, 999_999);
