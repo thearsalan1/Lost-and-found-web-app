@@ -137,3 +137,132 @@ export const LoginTemplate = (otp:number) =>{
 </html>
   `
 }
+
+export const ClaimStatusTemplate = ({
+  userName,
+  itemName,
+  status, // "approved" | "rejected"
+  reason = ""
+}: {
+  userName: string;
+  itemName: string;
+  status: "approved" | "rejected";
+  reason?: string;
+}) => {
+
+  const isApproved = status === "approved";
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Back2u – Claim Status</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=DM+Mono:wght@400;500&display=swap');
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f0ede8;font-family:'Sora',sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 40px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#1a1a2e;padding:36px 40px;text-align:left;">
+              <table>
+                <tr>
+                  <td style="background:#e8ff5a;border-radius:10px;width:42px;height:42px;text-align:center;font-family:'DM Mono';font-size:20px;font-weight:500;color:#1a1a2e;">
+                    B2
+                  </td>
+                  <td style="padding-left:14px;">
+                    <div style="font-size:22px;font-weight:700;color:#ffffff;">Back2u</div>
+                    <div style="font-size:11px;color:#8888aa;letter-spacing:2px;text-transform:uppercase;">Lost & Found</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:44px 40px;">
+
+              <p style="font-size:13px;font-weight:600;color:${isApproved ? "#2ecc71" : "#e74c3c"};letter-spacing:2px;text-transform:uppercase;">
+                Claim ${status}
+              </p>
+
+              <h1 style="font-size:26px;font-weight:700;color:#1a1a2e;">
+                ${isApproved ? "Your claim has been approved 🎉" : "Your claim was rejected ❌"}
+              </h1>
+
+              <p style="font-size:15px;color:#555577;line-height:1.7;">
+                Hi <strong>${userName}</strong>,<br/><br/>
+                Your claim request for <strong>${itemName}</strong> has been 
+                <strong style="color:${isApproved ? "#2ecc71" : "#e74c3c"};">
+                  ${status}
+                </strong>.
+              </p>
+
+              ${
+                isApproved
+                  ? `
+                <!-- Approved Box -->
+                <table width="100%" style="margin:30px 0;">
+                  <tr>
+                    <td style="background:#f0fff5;border-left:4px solid #2ecc71;padding:16px;border-radius:8px;">
+                      <p style="margin:0;font-size:14px;color:#2e7d32;">
+                        🎉 You can now connect with the item finder and collect your item safely.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              `
+                  : `
+                <!-- Rejected Box -->
+                <table width="100%" style="margin:30px 0;">
+                  <tr>
+                    <td style="background:#fff5f5;border-left:4px solid #e74c3c;padding:16px;border-radius:8px;">
+                      <p style="margin:0;font-size:14px;color:#c0392b;">
+                        ❌ Unfortunately, your claim could not be verified.
+                        ${reason ? `<br/><br/><strong>Reason:</strong> ${reason}` : ""}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              `
+              }
+
+              <hr style="border:none;border-top:1px solid #ece9e3;margin:30px 0;" />
+
+              <p style="font-size:13px;color:#888899;">
+                If you have any questions, feel free to contact support.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f5f3ee;padding:20px 40px;">
+              <p style="font-size:12px;color:#aaaabb;">
+                Back2u © 2026 • support@back2u.app
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`;
+};
